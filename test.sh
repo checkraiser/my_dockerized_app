@@ -5,6 +5,8 @@ colors
 driver=virtualbox
 node_number=3
 skip_master=0
+index=1
+let "to = $index + $node_number"
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -13,6 +15,9 @@ while [ "$1" != "" ]; do
                                 ;;
         -n | --nodes )          shift
                                 node_number=$1
+                                ;;
+        -i | --index )          shift
+                                index=$1
                                 ;;
         -s | --skip-master )    skip_master=1
     esac
@@ -23,13 +28,14 @@ echo "driver = $driver";
 echo "node_number = $node_number";
 echo "skip_master = $skip_master";
 
+
 if [ $skip_master != "0" ]; then
   echo "TRUE";
 else
   echo "FALSE";
 fi
 
-for i in `seq 1 $node_number`; do
+for i in `seq $index (($index + $node_number))`; do
   echo $fg_bold[red] "\nCreate node$i machine...\n"
   echo $fg[white]
   echo 123

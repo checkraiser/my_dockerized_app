@@ -6,6 +6,7 @@ driver=virtualbox
 node_number=3
 keystore=keystore
 skip_master="0"
+index=1
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -15,13 +16,19 @@ while [ "$1" != "" ]; do
         -n | --nodes )          shift
                                 node_number=$1
                                 ;;
+        -i | --index )          shift
+                                index=$1
+                                ;;
         -s | --skip-master )    skip_master=1
     esac
     shift
 done
 
+let "to = $index + $node_number"
+
 if [ $skip_master != "0" ]; then
   echo "Skipping master and keystore";
+  eval "$(docker-machine env master)"
 else
   echo $fg_bold[red] "\nCreate keystore machine...\n"
   echo $fg[white]
@@ -48,7 +55,7 @@ else
     master
 fi
 
-for i in `seq 1 $node_number`; do
+for i in `seq $index $to`; do
   echo $fg_bold[red] "\nCreate node$i machine...\n"
   echo $fg[white]
   docker-machine create -d $driver --swarm \
@@ -58,4 +65,4 @@ for i in `seq 1 $node_number`; do
     node$i
 done
 
-eval "$(docker-machine env master)"
+eval "$(docker-machine env --swarm master)"

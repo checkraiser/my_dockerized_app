@@ -15,8 +15,6 @@ services:
       - $DOCKER_CERT_PATH:$DOCKER_CERT_PATH
     depends_on:
       - web
-    networks:
-      - front-tier
 
   postgres:
     image: 'postgres:9.5'
