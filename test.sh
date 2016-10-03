@@ -7,7 +7,7 @@ node_number=3
 skip_master=0
 index=1
 let "to = $index + $node_number"
-
+echo $DIGITALOCEAN_ACCESS_TOKEN
 while [ "$1" != "" ]; do
     case $1 in
         -d | --driver )         shift

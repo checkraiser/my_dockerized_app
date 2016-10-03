@@ -2,7 +2,7 @@
 autoload colors
 colors
 
-driver=virtualbox
+driver=digitalocean
 node_number=3
 keystore=keystore
 skip_master="0"
@@ -32,7 +32,7 @@ if [ $skip_master != "0" ]; then
 else
   echo $fg_bold[red] "\nCreate keystore machine...\n"
   echo $fg[white]
-  docker-machine create -d $driver $keystore
+  docker-machine create -d $driver --digitalocean-access-token $DIGITALOCEAN_ACCESS_TOKEN $keystore
 
   eval "$(docker-machine env $keystore)"
 
@@ -47,21 +47,21 @@ else
   echo $fg_bold[red] "\nCreate swarm master machine...\n"
   echo $fg[white]
 
-  docker-machine create -d $driver \
+  docker-machine create -d $driver --digitalocean-access-token $DIGITALOCEAN_ACCESS_TOKEN \
     --swarm --swarm-master \
     --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
     --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-advertise=eth1:2376" \
+    --engine-opt="cluster-advertise=eth0:2376" \
     master
 fi
 
 for i in `seq $index $to`; do
   echo $fg_bold[red] "\nCreate node$i machine...\n"
   echo $fg[white]
-  docker-machine create -d $driver --swarm \
+  docker-machine create -d $driver --digitalocean-access-token $DIGITALOCEAN_ACCESS_TOKEN --swarm \
     --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
     --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-advertise=eth1:2376" \
+    --engine-opt="cluster-advertise=eth0:2376" \
     node$i
 done
 
