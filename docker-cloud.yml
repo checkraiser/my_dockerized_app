@@ -1,0 +1,20 @@
+lb:
+  image: dockercloud/haproxy
+  links:
+    - web
+  ports:
+    - "80:80"
+  roles:
+    - global
+postgres:
+  image: 'postgres:9.5'
+  environment:
+    POSTGRES_USER: 'my_dockerized_app'
+    POSTGRES_PASSWORD: 'yourpassword'
+redis:
+  image: redis
+web:
+  image: asozontov/my_dockerized_app:v1
+  links:
+    - redis
+    - postgres
