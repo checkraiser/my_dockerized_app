@@ -1,4 +1,9 @@
+#!/bin/zsh
+autoload colors
+colors
+
 driver=virtualbox
+node_number=3
 keystore=keystore
 
 while [ "$1" != "" ]; do
@@ -6,21 +11,28 @@ while [ "$1" != "" ]; do
         -d | --driver )         shift
                                 driver=$1
                                 ;;
-        * )                     usage
-                                exit 1
+        -n | --nodes )          shift
+                                node_number=$1
     esac
     shift
 done
 
-echo docker-machine create -d $driver $keystore
+echo $fg_bold[red] "\nCreate keystore machine...\n"
+echo $fg[white]
 docker-machine create -d $driver $keystore
+
+eval "$(docker-machine env $keystore)"
+
+echo $fg_bold[red] "\nRun consul key/value store on $keystore machine...\n"
+echo $fg[white]
 
 docker run -d \
     -p "8500:8500" \
     -h "consul" \
     progrium/consul -server -bootstrap
 
-eval "$(docker-machine env $keystore)"
+echo $fg_bold[red] "\nCreate swarm master machine...\n"
+echo $fg[white]
 
 docker-machine create -d $driver \
   --swarm --swarm-master \
@@ -29,25 +41,15 @@ docker-machine create -d $driver \
   --engine-opt="cluster-advertise=eth1:2376" \
   master
 
-docker-machine create -d virtualbox \                                                                                                                                                               2.3.1
-    --swarm \
-    --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-advertise=eth1:2376" \
-  node1
-
-docker-machine create -d virtualbox \                                                                                                                                                               2.3.1
-    --swarm \
-    --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-advertise=eth1:2376" \
-  node2
-
-docker-machine create -d virtualbox \                                                                                                                                                               2.3.1
-    --swarm \
-    --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
-    --engine-opt="cluster-advertise=eth1:2376" \
-  node3
+for i in `seq 1 $node_number`; do
+  echo $fg_bold[red] "\nCreate node$i machine...\n"
+  echo $fg[white]
+  docker-machine create -d $driver \                                                                                                                                                               2.3.1
+      --swarm \
+      --swarm-discovery="consul://$(docker-machine ip $keystore):8500" \
+      --engine-opt="cluster-store=consul://$(docker-machine ip $keystore):8500" \
+      --engine-opt="cluster-advertise=eth1:2376" \
+    node$i
+done
 
 eval "$(docker-machine env master)"
