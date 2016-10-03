@@ -8,15 +8,11 @@ services:
       - "80:80"
     environment:
       - ADDITIONAL_SERVICES=mydockerizedapp:web
-      - DEBUG=True
       - DOCKER_TLS_VERIFY
       - DOCKER_HOST
       - DOCKER_CERT_PATH
     volumes:
       - $DOCKER_CERT_PATH:$DOCKER_CERT_PATH
-    #   - APP_NAME=web
-    #   - CONSUL_URL=192.168.99.129:8500
-    #   - constraint:node==mhs-demo0
     depends_on:
       - web
     networks:
@@ -31,8 +27,7 @@ services:
       - '5433:5433'
     volumes:
       - 'postgres:/var/lib/postgresql/data'
-    networks:
-      - back-tier
+
   redis:
     image: 'redis:3.2-alpine'
     command: redis-server --requirepass yourpassword
@@ -40,8 +35,7 @@ services:
       - '6379:6379'
     volumes:
       - 'redis:/var/lib/redis/data'
-    networks:
-      - back-tier
+
   web:
     depends_on:
       - 'postgres'
@@ -49,17 +43,8 @@ services:
     image: asozontov/my_dockerized_app:v2
     expose:
       - "3000"
-    networks:
-      - front-tier
-      - back-tier
-    # volumes:
-      # - '.:/my_dockerized_app'
     env_file:
       - '.env'
-    environment:
-      - APP_PORT=3000
-      - SERVICE_NAME=web
-      - SERVICE_TAGS=www
 
   # sidekiq:
   #   depends_on:
@@ -98,9 +83,3 @@ volumes:
     driver: local
   redis:
     driver: local
-
-networks:
-  front-tier:
-    driver: overlay
-  back-tier:
-    driver: overlay
